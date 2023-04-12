@@ -9,9 +9,9 @@
 #SBATCH --cpus-per-task=4 # number of cores per task
 #SBATCH --gres=gpu:1
 #SBATCH --mem=64G
-#SBATCH --nodelist=manchester # if you need specific nodes
-#SBATCH --exclude=blaze,freddie,steropes # nodes not yet on SLURM-only
-#SBATCH -t 1-12:00 # time requested (D-HH:MM)
+#SBATCH --nodelist=freddie # if you need specific nodes
+#SBATCH --exclude=blaze,steropes # nodes not yet on SLURM-only
+#SBATCH -t 2-00:00 # time requested (D-HH:MM)
 # slurm will cd to this directory before running the script
 # you can also just run sbatch submit.sh from the directory
 # you want to be in
@@ -51,7 +51,8 @@ export PYTHONUNBUFFERED=1
 python3 -c "import torch; print('There are', torch.cuda.device_count(), 'GPU(s)')"
 echo visible devices: $CUDA_VISIBLE_DEVICES
 
-python train.py --model-name models/no_dropout --dropout 0.0
+# python train.py --model-name models/no_dropout_8 --dropout 0.0 --epochs 120
+nvidia-smi
 
 # print completion time
 date

@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 
-class MainNet(nn.Module):
+class UformerSimple(nn.Module):
     def __init__(self, dropout=0.1):
         super().__init__()
 
@@ -20,7 +20,7 @@ class MainNet(nn.Module):
             WindowAttention(8, downsample=False, in_channels=128, num_heads=4, dropout=dropout),
             WindowAttention(8, downsample=True, in_channels=128, num_heads=4, dropout=dropout)
         )
-        self.bottleneck = WindowAttention(16, downsample=False, in_channels=256, num_heads=4, dropout=dropout)
+        self.bottleneck = WindowAttention(8, downsample=False, in_channels=256, num_heads=8, dropout=dropout)
 
         self.upsample1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
         self.decoder1 = WindowAttention(8, downsample=False, in_channels=256, num_heads=4, dropout=dropout)
@@ -128,7 +128,7 @@ class WindowAttention(nn.Module):
                 
         return x
 
-
+# Attention over patches. Didn't seem to work well
 class Block(nn.Module):
     def __init__(self, window_size=8, downsample=False, in_channels=32, num_layers=2):
         super().__init__()

@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 import tqdm
 from model import *
-from utils.data import *
-from utils import metrics
+from dataloaders.RealBlur import *
+from utils import utils
 import argparse
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -16,6 +16,7 @@ def main(model_name: str, epochs: int, dropout: float):
     np.random.seed(1234)
     torch.manual_seed(1234)
     torch.cuda.manual_seed_all(1234)
+    print(f"Training model {model_name}...")
     aug = transforms.Compose([
         transforms.ToTensor(),
         transforms.RandomHorizontalFlip()
@@ -23,20 +24,22 @@ def main(model_name: str, epochs: int, dropout: float):
     train_loader = DataLoader(RealBlurDataset(augmentation=aug), batch_size=5, shuffle=True, pin_memory=True)
     val_loader = DataLoader(RealBlurDataset(train=False), batch_size=5, shuffle=False, pin_memory=True)
 
-    model = MainNet().to(device)
+    model = UformerSimple(dropout=dropout).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.02)
-    loss_curve = []
+    stats = []
     if os.path.exists(model_name + '/model.pt'):
         model.load_state_dict(torch.load(model_name + '/model.pt'))
         optimizer.load_state_dict(torch.load(model_name + '/optimizer.pt'))
         with open(model_name + '/stats.pk', 'rb') as f:
-            loss_curve = pickle.load(f)
-        print(f"Resuming at epoch {len(loss_curve)}")
+            stats = pickle.load(f)
+        print(f"Resuming at epoch {len(stats)}")
+    else:
+        os.makedirs(model_name, exist_ok=True)
     # evaluate(model, val_loader, full=False) # Get starting stats
 
     loss_fn = CharbonnierLoss()
 
-    for epoch in range(len(loss_curve), epochs):
+    for epoch in range(len(stats), epochs):
         print(f"Training epoch {epoch}...")
         model.train()
         epoch_losses = []
@@ -50,7 +53,7 @@ def main(model_name: str, epochs: int, dropout: float):
             # if len(epoch_losses) > 100: break
         print(f"Average training loss: {np.round(np.mean(epoch_losses), 4)}")
         eval_loss, eval_psnr, eval_ssim = evaluate(model, val_loader)
-        loss_curve.append({
+        stats.append({
             'epoch': epoch + 1,
             'train_loss': np.mean(epoch_losses),
             'eval_loss': eval_loss,
@@ -59,8 +62,10 @@ def main(model_name: str, epochs: int, dropout: float):
         })
         torch.save(model.state_dict(), model_name + '/model.pt')
         torch.save(optimizer.state_dict(), model_name + '/optimizer.pt')
+        with open(model_name + '/stats.pk', 'wb') as f:
+            pickle.dump(stats, f)
 
-def evaluate(model: MainNet, val_loader: DataLoader, full=True):
+def evaluate(model: UformerSimple, val_loader: DataLoader, full=True):
     print("Evaluating model...")
     model.eval()
     loss_fn = CharbonnierLoss()
@@ -75,16 +80,16 @@ def evaluate(model: MainNet, val_loader: DataLoader, full=True):
         
         for i in range(gt.shape[0]):
             psnr.append(
-                metrics.calculate_psnr(
-                    metrics.tensor2uint(pred[i]),
-                    metrics.tensor2uint(gt[i]),
+                utils.calculate_psnr(
+                    utils.tensor2uint(pred[i]),
+                    utils.tensor2uint(gt[i]),
                     input_order='HWC'
                 ),
             )
             ssim.append(
-                metrics.calculate_ssim(
-                    metrics.tensor2uint(pred[i]),
-                    metrics.tensor2uint(gt[i]),
+                utils.calculate_ssim(
+                    utils.tensor2uint(pred[i]),
+                    utils.tensor2uint(gt[i]),
                     input_order='HWC'
                 ),
             )
@@ -95,7 +100,7 @@ def evaluate(model: MainNet, val_loader: DataLoader, full=True):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Deblur trainer')
-    parser.add_argument('--model-name', type=str, default='models/basic')
+    parser.add_argument('--checkpoint-path', type=str, default='checkpoints/basic')
     parser.add_argument('--epochs', type=int, default=32)
     parser.add_argument('--dropout', type=float, default=0.1)
     args = parser.parse_args()
