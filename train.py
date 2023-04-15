@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn as nn
 import tqdm
-from model import *
+from models.uformer import *
 from dataloaders.RealBlur import *
 from utils import utils
 import argparse
