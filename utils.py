@@ -204,3 +204,37 @@ def rgb2ycbcr(img, y_only=False):
             img, [[65.481, -37.797, 112.0], [128.553, -74.203, -93.786],[24.966, 112.0, -18.214]]) + [16, 128, 128]
     out_img = _convert_output_type_range(out_img, img_type)
     return out_img
+
+def calculate_fid_score(predicted_images, true_images, eps=1e-6):
+    """
+    Calculates the Frechet Inception Distance (FID) score between predicted and true images.
+
+    Args:
+        predicted_images (torch.Tensor): Tensor containing the predicted images.
+        true_images (torch.Tensor): Tensor containing the true images.
+        eps (float): A small value to avoid division by zero. Default: 1e-6.
+
+    Returns:
+        float: The FID score between the predicted and true images.
+    """
+
+    # Calculate the mean and covariance of the true images
+    true_images = true_images.detach().cpu().numpy()
+    true_images = np.transpose(true_images, (0, 2, 3, 1))
+    true_images = (true_images * 255).astype(np.uint8)
+    true_images = true_images.reshape(true_images.shape[0], -1)
+    true_mean = np.mean(true_images, axis=0)
+    true_cov = np.cov(true_images, rowvar=False)
+
+    # Calculate the mean and covariance of the predicted images
+    predicted_images = predicted_images.detach().cpu().numpy()
+    predicted_images = np.transpose(predicted_images, (0, 2, 3, 1))
+    predicted_images = (predicted_images * 255).astype(np.uint8)
+    predicted_images = predicted_images.reshape(predicted_images.shape[0], -1)
+    pred_mean = np.mean(predicted_images, axis=0)
+    pred_cov = np.cov(predicted_images, rowvar=False)
+
+    # Calculate the FID score
+    fid = np.sum((true_mean - pred_mean)**2) + np.trace(true_cov + pred_cov - 2*np.sqrt(true_cov.dot(pred_cov))+eps)
+
+    return fid
