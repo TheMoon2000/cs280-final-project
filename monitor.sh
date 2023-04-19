@@ -7,7 +7,7 @@
 #SBATCH -N 1 # number of nodes requested
 #SBATCH -n 1 # number of tasks (i.e. processes)
 #SBATCH --cpus-per-task=2 # number of cores per task
-#SBATCH --gres=gpu:0
+#SBATCH --gres=gpu:1
 #SBATCH --mem=10G
 #SBATCH --nodelist=freddie # if you need specific nodes
 #SBATCH --exclude=blaze,steropes # nodes not yet on SLURM-only
@@ -52,6 +52,7 @@ python3 -c "import torch; print('There are', torch.cuda.device_count(), 'GPU(s)'
 echo visible devices: $CUDA_VISIBLE_DEVICES
 
 nvidia-smi
+sleep 100
 htop
 
 # print completion time

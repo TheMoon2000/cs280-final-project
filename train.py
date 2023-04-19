@@ -32,7 +32,8 @@ def main(task: str, arch: str, model_name: str, epochs: int, batch_size: int):
         train_dataset = ColorizationDataset(train=True)
         eval_dataset = ColorizationDataset(train=False)
         evaluation_fn = colorization_eval
-        loss_fn = lambda pred, gt: torch.sum((pred - gt) ** 2, dim=1).mean()
+        # loss_fn = lambda pred, gt: torch.sum((pred - gt) ** 2, dim=1).mean()
+        loss_fn = CharbonnierLoss()
     else:
         raise NotImplementedError()
     
