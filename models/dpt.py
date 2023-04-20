@@ -36,6 +36,7 @@ def _make_encoder(
     scratch = _make_scratch(
         [96, 192, 384, 768], features, groups=groups, expand=expand
     )  # ViT-B/16 - 84.6% Top1 (backbone)
+    return pretrained, scratch
 
 def _make_scratch(in_shape, out_shape, groups=1, expand=False):
     scratch = nn.Module()

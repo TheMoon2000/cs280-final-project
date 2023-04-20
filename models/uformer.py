@@ -20,7 +20,7 @@ class UformerSimple(nn.Module):
             WindowAttention(8, downsample=False, in_channels=128, num_heads=4, dropout=dropout),
             WindowAttention(8, downsample=True, in_channels=128, num_heads=4, dropout=dropout)
         )
-        self.bottleneck = WindowAttention(8, downsample=False, in_channels=256, num_heads=8, dropout=dropout)
+        self.bottleneck =  WindowAttention(7, downsample=False, in_channels=256, num_heads=8, dropout=dropout)
 
         self.upsample1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
         self.decoder1 = WindowAttention(8, downsample=False, in_channels=256, num_heads=4, dropout=dropout)
