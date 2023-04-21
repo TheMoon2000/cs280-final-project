@@ -311,7 +311,7 @@ class AxialAttention(nn.Module):
 # axial image transformer
 
 class AxialImageTransformer(nn.Module):
-    def __init__(self, dim, depth, heads = 8, dim_heads = None, dim_index = 1, reversible = True, axial_pos_emb_shape = None):
+    def __init__(self, dim, depth, input_channels=3, output_channels=3, heads = 8, dim_heads = None, dim_index = 1, reversible = True, axial_pos_emb_shape = None):
         super().__init__()
         permutations = calculate_permutations(2, dim_index)
 
@@ -322,6 +322,9 @@ class AxialImageTransformer(nn.Module):
             nn.Conv2d(dim * 4, dim, 3, padding = 1)
         )
 
+        self.input_channels = input_channels
+        self.output_channels = output_channels
+        self.input_project = nn.Conv2d(input_channels, dim, kernel_size=1)
         self.pos_emb = AxialPositionalEmbedding(dim, axial_pos_emb_shape, dim_index) if exists(axial_pos_emb_shape) else nn.Identity()
 
         layers = nn.ModuleList([])
@@ -334,6 +337,9 @@ class AxialImageTransformer(nn.Module):
         execute_type = ReversibleSequence if reversible else Sequential
         self.layers = execute_type(layers)
 
+        self.output_project = nn.Conv2d(dim, output_channels, kernel_size=1)
+
     def forward(self, x):
+        x = self.input_project(x)
         x = self.pos_emb(x)
-        return self.layers(x)
+        return self.output_project(self.layers(x))

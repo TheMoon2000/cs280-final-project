@@ -44,7 +44,8 @@ def main(task: str, arch: str, model_name: str, epochs: int, batch_size: int):
         model = DPT(40 if task == 'seg' else 3)
         optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     elif arch == 'axial':
-        model = AxialImageTransformer(dim=128, depth=12, reversible=True)
+        model = AxialImageTransformer(dim=128, depth=8, heads=4, reversible=True)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.02)
     elif arch == 'unet':
         raise NotImplementedError()
     elif arch == 'uformer':

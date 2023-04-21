@@ -8,8 +8,8 @@
 #SBATCH -n 1 # number of tasks (i.e. processes)
 #SBATCH --cpus-per-task=2 # number of cores per task
 #SBATCH --gres=gpu:1
-#SBATCH --mem=140G
-#SBATCH --nodelist=freddie # if you need specific nodes
+#SBATCH --mem=100G
+#SBATCH --nodelist=manchester # if you need specific nodes
 #SBATCH --exclude=blaze,steropes # nodes not yet on SLURM-only
 #SBATCH -t 7-01:00 # time requested (D-HH:MM)
 # slurm will cd to this directory before running the script
@@ -51,8 +51,9 @@ export PYTHONUNBUFFERED=1
 python3 -c "import torch; print('There are', torch.cuda.device_count(), 'GPU(s)')"
 echo visible devices: $CUDA_VISIBLE_DEVICES
 
-python train.py --task color --arch dpt --checkpoint-path checkpoints/color-dpt-base-new --batch-size 5
+# python train.py --task color --arch dpt --checkpoint-path checkpoints/color-dpt-base-new --batch-size 5
 # python train.py --task color --arch uformer --checkpoint-path checkpoints/uformer-color --batch-size 4
+python train.py --task color --arch axial --checkpoint-path checkpoints/axial-color -b 6
 
 # print completion time
 date
