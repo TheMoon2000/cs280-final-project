@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class UformerSimple(nn.Module):
-    def __init__(self, dropout=0.1):
+    def __init__(self, dropout=0.1, out_channels=3, bottleneck_size=7):
         super().__init__()
 
         self.dropout_rate = dropout
@@ -20,7 +20,7 @@ class UformerSimple(nn.Module):
             WindowAttention(8, downsample=False, in_channels=128, num_heads=4, dropout=dropout),
             WindowAttention(8, downsample=True, in_channels=128, num_heads=4, dropout=dropout)
         )
-        self.bottleneck =  WindowAttention(7, downsample=False, in_channels=256, num_heads=8, dropout=dropout)
+        self.bottleneck =  WindowAttention(bottleneck_size, downsample=False, in_channels=256, num_heads=8, dropout=dropout)
 
         self.upsample1 = nn.ConvTranspose2d(256, 128, 2, stride=2)
         self.decoder1 = WindowAttention(8, downsample=False, in_channels=256, num_heads=4, dropout=dropout)
@@ -28,7 +28,7 @@ class UformerSimple(nn.Module):
         self.decoder2 = WindowAttention(8, downsample=False, in_channels=128, dropout=dropout)
         self.upsample3 = nn.ConvTranspose2d(128, 32, 2, stride=2)
         self.decoder3 = WindowAttention(8, downsample=False, in_channels=64, dropout=dropout)
-        self.output_conv = nn.Conv2d(64, 3, kernel_size=3, padding=1)
+        self.output_conv = nn.Conv2d(64, out_channels, kernel_size=3, padding=1)
     
     def forward(self, x: torch.Tensor):
         delta = self.input_conv(x)
@@ -47,10 +47,13 @@ class UformerSimple(nn.Module):
         delta2 = self.upsample3(delta2)
         delta = torch.cat([delta2, delta], dim=1) # 32 + 32 channels
         delta = self.decoder3(delta)
-
+        
         delta = self.output_conv(delta)
         
-        return x + delta
+        if delta.shape[1] == x.shape[1]:
+            return x + delta
+        else:
+            return delta
 
 class WindowAttention(nn.Module):
     def __init__(self, window_size=8, downsample=False, in_channels=32, num_layers=2, num_heads=2, dropout=0.1):

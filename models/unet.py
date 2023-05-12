@@ -11,10 +11,6 @@ class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels, mid_channels=None):
         super().__init__()
 
-        print("Initializing")
-        print("in_channels", in_channels)
-        print("out_channels", out_channels)
-
         if not mid_channels:
             mid_channels = out_channels
         self.double_conv = nn.Sequential(
@@ -27,7 +23,6 @@ class DoubleConv(nn.Module):
         )
 
     def forward(self, x):
-        print(x.shape)
         return self.double_conv(x)
 
 
@@ -116,9 +111,7 @@ class UNet(nn.Module):
 
 
     def forward(self, x):
-        print("start x.shape", x.shape)
         x1 = self.inc(x)
-        print("later x1.shape", x1.shape)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.down3(x3)
@@ -126,10 +119,7 @@ class UNet(nn.Module):
         x = self.up1(x5, x4)
         x = self.up2(x, x3)
         x = self.up3(x, x2)
-        print("before x.shape", x.shape)
-        print("before x1.shape", x1.shape)
         x = self.up4(x, x1)
-        print("before x.shape", x.shape)
         logits = self.outc(x)
         return logits
 

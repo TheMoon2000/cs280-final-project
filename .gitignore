@@ -3,3 +3,4 @@ __pycache__
 logs
 *.pt
 checkpoints
+*.png

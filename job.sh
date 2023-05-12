@@ -8,7 +8,7 @@
 #SBATCH -n 1 # number of tasks (i.e. processes)
 #SBATCH --cpus-per-task=2 # number of cores per task
 #SBATCH --gres=gpu:1
-#SBATCH --mem=100G
+#SBATCH --mem=180G
 #SBATCH --nodelist=manchester # if you need specific nodes
 #SBATCH --exclude=blaze,steropes # nodes not yet on SLURM-only
 #SBATCH -t 7-01:00 # time requested (D-HH:MM)
@@ -22,7 +22,7 @@
 # filename patterns here: https://slurm.schedmd.com/sbatch.html
 # %N is the hostname (if used, will create output(s) per node)
 # %j is jobid
-#SBATCH -o logs/%N.%j.out # STDOUT
+#SBATCH -o checkpoints/uformer-seg-2/%N.%j.out # STDOUT
 ##SBATCH -e slurm.%N.%j.err # STDERR
 # if you want to get emails as your jobs run/fail
 #SBATCH --mail-type=ALL # Mail events (NONE, BEGIN, END, FAIL, ALL)
@@ -51,9 +51,7 @@ export PYTHONUNBUFFERED=1
 python3 -c "import torch; print('There are', torch.cuda.device_count(), 'GPU(s)')"
 echo visible devices: $CUDA_VISIBLE_DEVICES
 
-# python train.py --task color --arch dpt --checkpoint-path checkpoints/color-dpt-base-new --batch-size 5
-# python train.py --task color --arch uformer --checkpoint-path checkpoints/uformer-color --batch-size 4
-python train.py --task color --arch axial --checkpoint-path checkpoints/axial-color -b 6
+python train.py --task seg --arch uformer --checkpoint-path checkpoints/uformer-seg-2 -b 4
 
 # print completion time
 date

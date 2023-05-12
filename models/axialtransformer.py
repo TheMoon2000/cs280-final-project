@@ -337,7 +337,8 @@ class AxialImageTransformer(nn.Module):
         execute_type = ReversibleSequence if reversible else Sequential
         self.layers = execute_type(layers)
 
-        self.output_project = nn.Conv2d(dim, output_channels, kernel_size=1)
+        # self.output_project = nn.Conv2d(dim, output_channels, kernel_size=1)
+        self.output_project = nn.Conv2d(dim, output_channels, kernel_size=3, padding=1)
 
     def forward(self, x):
         x = self.input_project(x)
